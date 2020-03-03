@@ -7,7 +7,7 @@ import java.util.*;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.Config;
-import org.apache.storm.LocalCluster;
+import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 
 public class TwitterHashtagStorm {
@@ -34,10 +34,10 @@ public class TwitterHashtagStorm {
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt())
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("hashtag"));
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology("TwitterHashtagStorm", config,
-                builder.createTopology());
-        Thread.sleep(10000);
-        cluster.shutdown();
+        try{
+            //StormSubmitter.sub
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 }
