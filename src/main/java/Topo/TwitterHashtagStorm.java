@@ -6,27 +6,26 @@ import java.util.*;
 
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
+import org.apache.storm.LocalCluster;
 import org.apache.storm.Config;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 
 public class TwitterHashtagStorm {
     public static void main(String[] args) throws Exception{
-        String consumerKey = args[0];
-        String consumerSecret = args[1];
+        String consumerKey = "A8nzDPkk2T17MkRpUEN0YiBS6";
+        String consumerSecret = "NqvdfcLuc5O6d8oxeonWDgScvYSn5KrjGeZtdbjiwCQTyqH2vD";
 
-        String accessToken = args[2];
-        String accessTokenSecret = args[3];
-
-        String[] arguments = args.clone();
-        String[] keyWords = Arrays.copyOfRange(arguments, 4, arguments.length);
+        String accessToken = "1232742956160864258-owzqWwtlZ8iov6VYOb80nFJzdbQCkg";
+        String accessTokenSecret = "y2jWZ0TE2wNW1YFDmzORNCBprUpsDVDrTRav708ehebTk";
 
         Config config = new Config();
-        config.setDebug(true);
+        config.setDebug(false);
+        config.setNumWorkers(1);
 
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("twitter-spout", new TwitterSampleSpout(consumerKey,
-                consumerSecret, accessToken, accessTokenSecret, keyWords));
+                consumerSecret, accessToken, accessTokenSecret));
 
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt())
                 .shuffleGrouping("twitter-spout");
@@ -34,9 +33,9 @@ public class TwitterHashtagStorm {
         builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt())
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("hashtag"));
 
-        try{
-            //StormSubmitter.sub
-        }catch(Exception e){
+        try {
+            StormSubmitter.submitTopology("twitter_lossy_count", config, builder.createTopology());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

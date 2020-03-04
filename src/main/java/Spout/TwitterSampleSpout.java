@@ -34,15 +34,13 @@ public class TwitterSampleSpout extends BaseRichSpout {
     String consumerSecret;
     String accessToken;
     String accessTokenSecret;
-    String[] keyWords;
 
     public TwitterSampleSpout(String consumerKey, String consumerSecret,
-                              String accessToken, String accessTokenSecret, String[] keyWords) {
+                              String accessToken, String accessTokenSecret) {
         this.consumerKey = consumerKey;
         this.consumerSecret = consumerSecret;
         this.accessToken = accessToken;
         this.accessTokenSecret = accessTokenSecret;
-        this.keyWords = keyWords;
     }
 
     public TwitterSampleSpout() {
@@ -88,13 +86,8 @@ public class TwitterSampleSpout extends BaseRichSpout {
 
         _twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
         _twitterStream.addListener(listener);
+        _twitterStream.sample();
 
-        if (keyWords.length == 0) {
-            _twitterStream.sample();
-        }else {
-            FilterQuery query = new FilterQuery().track(keyWords);
-            _twitterStream.filter(query);
-        }
     }
 
     @Override
