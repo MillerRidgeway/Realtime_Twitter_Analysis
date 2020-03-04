@@ -1,3 +1,5 @@
+package Bolt;
+
 public class LossyHashtag {
     private String hashtag;
     private int frequency;

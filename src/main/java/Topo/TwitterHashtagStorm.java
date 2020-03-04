@@ -30,13 +30,22 @@ public class TwitterHashtagStorm {
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt())
                 .shuffleGrouping("twitter-spout");
 
-        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt())
+        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(100))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("hashtag"));
 
-        try {
-            StormSubmitter.submitTopology("twitter_lossy_count", config, builder.createTopology());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        builder.setBolt("twitter-hashtag-logger-bolt", new HashtagLoggerBolt())
+                .globalGrouping("twitter-hashtag-counter-bolt");
+
+        LocalCluster cluster = new LocalCluster();
+        cluster.submitTopology("TwitterHashtagStorm", config,
+                builder.createTopology());
+        Thread.sleep(10000);
+        cluster.shutdown();
+
+//        try {
+//            StormSubmitter.submitTopology("twitter_lossy_count", config, builder.createTopology());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 }

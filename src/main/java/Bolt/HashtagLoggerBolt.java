@@ -16,12 +16,10 @@ import java.util.Map;
 public class HashtagLoggerBolt implements IRichBolt {
     private OutputCollector collector;
     private Map<String, Integer> hashtagCounts;
-    private int windowSize;
     private BufferedWriter writer;
     private String logLocation;
 
-    public HashtagLoggerBolt(int windowSize) throws IOException {
-        this.windowSize = windowSize;
+    public HashtagLoggerBolt() throws IOException {
         this.logLocation = "/s/chopin/b/grad/millerr/storm_logs";
     }
     @Override
@@ -37,7 +35,7 @@ public class HashtagLoggerBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-
+        System.out.println("Got a hashtag: " + tuple.getValueByField("hashtag"));
     }
 
     @Override
