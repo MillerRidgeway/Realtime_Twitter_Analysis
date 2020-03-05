@@ -26,13 +26,14 @@ public class HashtagReaderBolt implements IRichBolt {
     @Override
     public void execute(Tuple tuple) {
         Status tweet = (Status) tuple.getValueByField("tweet");
-        for(HashtagEntity hashtage : tweet.getHashtagEntities()) {
+        for (HashtagEntity hashtage : tweet.getHashtagEntities()) {
             this.collector.emit(new Values(hashtage.getText()));
         }
     }
 
     @Override
-    public void cleanup() {}
+    public void cleanup() {
+    }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {

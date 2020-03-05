@@ -1,5 +1,7 @@
 package Bolt;
 
+import org.apache.storm.Config;
+import org.apache.storm.Constants;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichBolt;
@@ -20,8 +22,9 @@ public class HashtagLoggerBolt implements IRichBolt {
     private String logLocation;
 
     public HashtagLoggerBolt() throws IOException {
-        this.logLocation = "/s/chopin/b/grad/millerr/storm_logs";
+        this.logLocation = "/s/chopin/b/grad/millerr/storm_logs/log.txt";
     }
+
     @Override
     public void prepare(Map<String, Object> map, TopologyContext topologyContext, OutputCollector outputCollector) {
         try {
@@ -35,7 +38,9 @@ public class HashtagLoggerBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        System.out.println("Got a hashtag: " + tuple.getValueByField("hashtag"));
+        if(isTickTuple(tuple) && hashtagCounts.size() != 0){
+
+        }
     }
 
     @Override
@@ -48,8 +53,16 @@ public class HashtagLoggerBolt implements IRichBolt {
 
     }
 
+    protected static boolean isTickTuple(Tuple tuple) {
+        return tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
+                && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID);
+    }
+
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        return null;
+        // configure how often a tick tuple will be sent to our bolt
+        Config conf = new Config();
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 10);
+        return conf;
     }
 }

@@ -2,6 +2,7 @@ package Topo;
 
 import Spout.*;
 import Bolt.*;
+
 import java.util.*;
 
 import org.apache.storm.tuple.Fields;
@@ -12,7 +13,7 @@ import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 
 public class TwitterHashtagStorm {
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         String consumerKey = "A8nzDPkk2T17MkRpUEN0YiBS6";
         String consumerSecret = "NqvdfcLuc5O6d8oxeonWDgScvYSn5KrjGeZtdbjiwCQTyqH2vD";
 
@@ -21,7 +22,7 @@ public class TwitterHashtagStorm {
 
         Config config = new Config();
         config.setDebug(false);
-        config.setNumWorkers(1);
+        config.setNumWorkers(3);
 
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout("twitter-spout", new TwitterSampleSpout(consumerKey,
@@ -30,7 +31,7 @@ public class TwitterHashtagStorm {
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt())
                 .shuffleGrouping("twitter-spout");
 
-        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(100))
+        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(0.005))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("hashtag"));
 
         builder.setBolt("twitter-hashtag-logger-bolt", new HashtagLoggerBolt())
@@ -39,7 +40,7 @@ public class TwitterHashtagStorm {
         LocalCluster cluster = new LocalCluster();
         cluster.submitTopology("TwitterHashtagStorm", config,
                 builder.createTopology());
-        Thread.sleep(10000);
+        Thread.sleep(100000);
         cluster.shutdown();
 
 //        try {

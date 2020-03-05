@@ -1,10 +1,10 @@
 package Bolt;
 
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.storm.Config;
+import org.apache.storm.Constants;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
 
@@ -18,12 +18,13 @@ import org.apache.storm.tuple.Tuple;
 public class HashtagCounterBolt implements IRichBolt {
     private Map<String, LossyHashtag> counterMap;
     private OutputCollector collector;
-    private int windowSize;
+    private double eta;
+    private double windowSize;
     private int bCurrent = 1;
     private int entryCount = 0;
 
-    public HashtagCounterBolt(int windowSize){
-        this.windowSize = windowSize;
+    public HashtagCounterBolt(double eta) {
+        this.windowSize = 1 / eta;
     }
 
     @Override
@@ -34,33 +35,39 @@ public class HashtagCounterBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        String key = tuple.getString(0);
+        if (isTickTuple(tuple) && counterMap.size() != 0) {
+            Map<String, LossyHashtag> sortedCounterMap = counterMap; //Will sort this eventually
 
-        //Insertion
-        entryCount++;
-        if(!counterMap.containsKey(key)){
-            LossyHashtag newEntry = new LossyHashtag(key, 1, bCurrent - 1);
-            counterMap.put(key, newEntry);
-        }else{
-            LossyHashtag existingEntry = counterMap.get(key);
-            existingEntry.setFrequency(existingEntry.getFrequency() + 1);
-            counterMap.put(key, existingEntry);
-        }
-
-        //Prune
-        if(entryCount % windowSize == 0){
-            Iterator mapIter = counterMap.entrySet().iterator();
-            while(mapIter.hasNext()){
-                LossyHashtag temp = (LossyHashtag) ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
-                if(temp.getFrequency() + temp.getDelta() <= bCurrent)
-                    mapIter.remove();
+            Iterator mapIter = sortedCounterMap.entrySet().iterator();
+            while (mapIter.hasNext()) {
+                LossyHashtag temp = ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
+                System.out.println("Emitting a hashtag: " + temp);
+                collector.emit(new Values(temp));
             }
-            bCurrent++;
+        } else {
+            //Insertion
+            String key = tuple.getString(0);
+            entryCount++;
+            if (!counterMap.containsKey(key)) {
+                LossyHashtag newEntry = new LossyHashtag(key, 1, bCurrent - 1);
+                counterMap.put(key, newEntry);
+            } else {
+                LossyHashtag existingEntry = counterMap.get(key);
+                existingEntry.setFrequency(existingEntry.getFrequency() + 1);
+                counterMap.put(key, existingEntry);
+            }
+
+            //Prune
+            if (entryCount % windowSize == 0) {
+                Iterator mapIter = counterMap.entrySet().iterator();
+                while (mapIter.hasNext()) {
+                    LossyHashtag temp = ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
+                    if (temp.getFrequency() + temp.getDelta() <= bCurrent)
+                        mapIter.remove();
+                }
+                bCurrent++;
+            }
         }
-
-
-        collector.ack(tuple);
-        collector.emit(new Values(counterMap.get(key)));
     }
 
     @Override
@@ -72,9 +79,17 @@ public class HashtagCounterBolt implements IRichBolt {
         declarer.declare(new Fields("hashtag"));
     }
 
+    protected static boolean isTickTuple(Tuple tuple) {
+        return tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
+                && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID);
+    }
+
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        return null;
+        // configure how often a tick tuple will be sent to our bolt
+        Config conf = new Config();
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 10);
+        return conf;
     }
 
 }
