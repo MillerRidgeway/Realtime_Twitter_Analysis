@@ -1,19 +1,20 @@
 package Bolt;
 
 import java.io.Serializable;
+import java.util.*;
 
 public class LossyHashtag implements Serializable, Comparable {
     private String hashtag;
     private int frequency;
     private int delta;
 
-    public LossyHashtag(String hashtag, int frequency, int delta) {
+    LossyHashtag(String hashtag, int frequency, int delta) {
         this.hashtag = hashtag;
         this.frequency = frequency;
         this.delta = delta;
     }
 
-    public String getHashtag() {
+    String getHashtag() {
         return hashtag;
     }
 
@@ -21,20 +22,24 @@ public class LossyHashtag implements Serializable, Comparable {
         this.hashtag = hashtag;
     }
 
-    public int getFrequency() {
+    int getFrequency() {
         return frequency;
     }
 
-    public void setFrequency(int frequency) {
+    void setFrequency(int frequency) {
         this.frequency = frequency;
     }
 
-    public int getDelta() {
+    int getDelta() {
         return delta;
     }
 
     public void setDelta(int delta) {
         this.delta = delta;
+    }
+
+    String toLogEntry(){
+     return "<" + getHashtag() + ">";
     }
 
     @Override
@@ -52,4 +57,25 @@ public class LossyHashtag implements Serializable, Comparable {
         else
             return 0;
     }
+
+    static Map<String, LossyHashtag> sortByValues(Map<String, LossyHashtag> map) {
+        List list = new LinkedList(map.entrySet());
+        // Defined Custom Comparator here
+        Collections.sort(list, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                return ((Comparable) ((Map.Entry) (o1)).getValue())
+                        .compareTo(((Map.Entry) (o2)).getValue());
+            }
+        });
+
+        // Here I am copying the sorted list in HashMap
+        // using LinkedHashMap to preserve the insertion order
+        HashMap sortedHashMap = new LinkedHashMap();
+        for (Iterator it = list.iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            sortedHashMap.put(entry.getKey(), entry.getValue());
+        }
+        return sortedHashMap;
+    }
 }
+

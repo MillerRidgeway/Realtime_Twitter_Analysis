@@ -3,13 +3,10 @@ package Topo;
 import Spout.*;
 import Bolt.*;
 
-import java.util.*;
 
 import org.apache.storm.tuple.Fields;
-import org.apache.storm.tuple.Values;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.Config;
-import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 
 public class TwitterHashtagStorm {

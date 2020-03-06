@@ -9,7 +9,6 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Tuple;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -22,7 +21,7 @@ public class HashtagLoggerBolt implements IRichBolt {
     private BufferedWriter writer;
     private String logLocation;
 
-    public HashtagLoggerBolt() throws IOException {
+    public HashtagLoggerBolt() {
         this.logLocation = "/s/chopin/b/grad/millerr/storm_logs/log.txt";
     }
 
@@ -41,30 +40,30 @@ public class HashtagLoggerBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         if (isTickTuple(tuple) && hashtagCounts.size() != 0) {
             //Write out 100 entries with the same timestamp every 10 seconds
-            Map<String, LossyHashtag> sortedCounts = hashtagCounts; //Need to sort this one too
+            Map<String, LossyHashtag> sortedCounts = LossyHashtag.sortByValues(hashtagCounts);
             int iterations = 0;
             String currentTime = new Timestamp(new java.util.Date().getTime()).toString();
-            for (Map.Entry<String, LossyHashtag> e : sortedCounts.entrySet()) {
-                if (iterations < 100) {
-                    try {
-                        writer.write("<" + currentTime + ">");
-                        writer.write(e.getValue().toString() + "\n");
-                        writer.flush();
-                    } catch (IOException except) {
-                        except.printStackTrace();
+            try {
+                writer.write("<" + currentTime + ">");
+                for (Map.Entry<String, LossyHashtag> e : sortedCounts.entrySet()) {
+                    if (iterations < 100) {
+                        writer.write(e.getValue().toLogEntry());
                     }
+                    iterations++;
                 }
-                iterations++;
+                writer.write("\n");
+                writer.flush();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
-            System.out.println("Wrote a batch");
+            System.out.println("Wrote a batch at: " + currentTime);
         } else {
-            //Add entry to buffer for write later
-            if(tuple.getFields().contains("hashtag")){
+            //If not tick tuple, add entry to buffer for write later
+            if (tuple.getFields().contains("hashtag")) {
                 LossyHashtag item = (LossyHashtag) tuple.getValueByField("hashtag");
                 hashtagCounts.put(item.getHashtag(), item);
-            }
-            else{
+            } else {
                 System.out.println("----TICK MESSAGE----");
             }
         }
@@ -94,7 +93,7 @@ public class HashtagLoggerBolt implements IRichBolt {
     public Map<String, Object> getComponentConfiguration() {
         // configure how often a tick tuple will be sent to our bolt
         Config conf = new Config();
-        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 5);
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 10);
         return conf;
     }
 }

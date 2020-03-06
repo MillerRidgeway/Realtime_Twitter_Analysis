@@ -86,8 +86,7 @@ public class TwitterSampleSpout extends BaseRichSpout {
 
         _twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
         _twitterStream.addListener(listener);
-        _twitterStream.sample();
-
+        _twitterStream.sample("en");
     }
 
     @Override

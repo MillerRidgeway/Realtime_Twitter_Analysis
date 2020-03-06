@@ -41,12 +41,11 @@ public class HashtagCounterBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         //Forward batch to logger bolt every 10s
         if (isTickTuple(tuple) && counterMap.size() != 0) {
-            Map<String, LossyHashtag> sortedCounterMap = counterMap; //Will sort this eventually
+            Map<String, LossyHashtag> sortedCounterMap = LossyHashtag.sortByValues(counterMap);
 
             Iterator mapIter = sortedCounterMap.entrySet().iterator();
             while (mapIter.hasNext()) {
                 LossyHashtag temp = ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
-                //System.out.println("Emitting a hashtag: " + temp);
                 collector.emit(new Values(temp));
             }
         } else {
@@ -93,7 +92,7 @@ public class HashtagCounterBolt implements IRichBolt {
     public Map<String, Object> getComponentConfiguration() {
         // configure how often a tick tuple will be sent to our bolt
         Config conf = new Config();
-        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 5);
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 10);
         return conf;
     }
 

@@ -1,6 +1,5 @@
 package Bolt;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import twitter4j.*;
