@@ -19,11 +19,15 @@ public class HashtagCounterBolt implements IRichBolt {
     private Map<String, LossyHashtag> counterMap;
     private OutputCollector collector;
     private double eta;
+    private double threshold;
     private double windowSize;
     private int bCurrent = 1;
     private int entryCount = 0;
 
-    public HashtagCounterBolt(double eta) {
+
+    public HashtagCounterBolt(double eta, double threshold) {
+        this.eta = eta;
+        this.threshold = threshold;
         this.windowSize = 1 / eta;
     }
 
@@ -35,13 +39,14 @@ public class HashtagCounterBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        //Forward batch to logger bolt every 10s
         if (isTickTuple(tuple) && counterMap.size() != 0) {
             Map<String, LossyHashtag> sortedCounterMap = counterMap; //Will sort this eventually
 
             Iterator mapIter = sortedCounterMap.entrySet().iterator();
             while (mapIter.hasNext()) {
                 LossyHashtag temp = ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
-                System.out.println("Emitting a hashtag: " + temp);
+                //System.out.println("Emitting a hashtag: " + temp);
                 collector.emit(new Values(temp));
             }
         } else {
@@ -79,7 +84,7 @@ public class HashtagCounterBolt implements IRichBolt {
         declarer.declare(new Fields("hashtag"));
     }
 
-    protected static boolean isTickTuple(Tuple tuple) {
+    private static boolean isTickTuple(Tuple tuple) {
         return tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
                 && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID);
     }
@@ -88,7 +93,7 @@ public class HashtagCounterBolt implements IRichBolt {
     public Map<String, Object> getComponentConfiguration() {
         // configure how often a tick tuple will be sent to our bolt
         Config conf = new Config();
-        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 10);
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 5);
         return conf;
     }
 

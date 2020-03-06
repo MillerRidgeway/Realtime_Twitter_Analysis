@@ -31,7 +31,7 @@ public class TwitterHashtagStorm {
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt())
                 .shuffleGrouping("twitter-spout");
 
-        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(0.005))
+        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(0.005, 0.3))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("hashtag"));
 
         builder.setBolt("twitter-hashtag-logger-bolt", new HashtagLoggerBolt())
