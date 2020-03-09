@@ -4,6 +4,7 @@ import Spout.*;
 import Bolt.*;
 
 
+import org.apache.storm.StormSubmitter;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.Config;
@@ -28,7 +29,7 @@ public class TwitterHashtagStorm {
         builder.setBolt("twitter-hashtag-reader-bolt", new HashtagReaderBolt())
                 .shuffleGrouping("twitter-spout");
 
-        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(0.005, 0.3))
+        builder.setBolt("twitter-hashtag-counter-bolt", new HashtagCounterBolt(0.005, 0.1))
                 .fieldsGrouping("twitter-hashtag-reader-bolt", new Fields("hashtag"));
 
         builder.setBolt("twitter-hashtag-logger-bolt", new HashtagLoggerBolt())

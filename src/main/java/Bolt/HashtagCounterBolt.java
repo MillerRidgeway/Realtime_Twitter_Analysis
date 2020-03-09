@@ -61,12 +61,14 @@ public class HashtagCounterBolt implements IRichBolt {
                 counterMap.put(key, existingEntry);
             }
 
-            //Prune
+            //Prune: Delta window and threshold value
             if (entryCount % windowSize == 0) {
                 Iterator mapIter = counterMap.entrySet().iterator();
                 while (mapIter.hasNext()) {
                     LossyHashtag temp = ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
                     if (temp.getFrequency() + temp.getDelta() <= bCurrent)
+                        mapIter.remove();
+                    else if(temp.getFrequency() > (threshold - eta)*entryCount)
                         mapIter.remove();
                 }
                 bCurrent++;
