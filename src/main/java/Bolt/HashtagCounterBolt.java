@@ -50,7 +50,7 @@ public class HashtagCounterBolt implements IRichBolt {
                 collector.emit(new Values(temp));
                 emitCount++;
             }
-            
+
         } else {
             //Insertion & Frequency increase
             String key = tuple.getString(0);

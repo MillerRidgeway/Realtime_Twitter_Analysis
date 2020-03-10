@@ -35,14 +35,14 @@ public class TwitterHashtagStorm {
         builder.setBolt("twitter-hashtag-logger-bolt", new HashtagLoggerBolt())
                 .globalGrouping("twitter-hashtag-counter-bolt");
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology("TwitterHashtagStorm", config,
-                builder.createTopology());
+//        LocalCluster cluster = new LocalCluster();
+//        cluster.submitTopology("TwitterHashtagStorm", config,
+//                builder.createTopology());
 
-//        try {
-//            StormSubmitter.submitTopology("twitter_lossy_count", config, builder.createTopology());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        try {
+            StormSubmitter.submitTopology("twitter_lossy_count", config, builder.createTopology());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
