@@ -39,7 +39,7 @@ public class LossyHashtag implements Serializable, Comparable {
     }
 
     String toLogEntry(){
-     return "<" + getHashtag() + ">";
+     return "<" + getHashtag() + "," + "freq: " + getFrequency() + ">";
     }
 
     @Override
@@ -51,9 +51,9 @@ public class LossyHashtag implements Serializable, Comparable {
     public int compareTo(Object o) {
         LossyHashtag temp = (LossyHashtag) o;
         if (this.frequency < temp.frequency)
-            return -1;
-        else if (this.frequency > temp.frequency)
             return 1;
+        else if (this.frequency > temp.frequency)
+            return -1;
         else
             return 0;
     }

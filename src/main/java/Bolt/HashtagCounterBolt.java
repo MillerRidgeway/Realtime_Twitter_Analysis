@@ -41,15 +41,18 @@ public class HashtagCounterBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         //Forward batch to logger bolt every 10s
         if (isTickTuple(tuple) && counterMap.size() != 0) {
+            int emitCount = 0;
             Map<String, LossyHashtag> sortedCounterMap = LossyHashtag.sortByValues(counterMap);
 
             Iterator mapIter = sortedCounterMap.entrySet().iterator();
-            while (mapIter.hasNext()) {
+            while (mapIter.hasNext() && emitCount < 100) {
                 LossyHashtag temp = ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
                 collector.emit(new Values(temp));
+                emitCount++;
             }
+            
         } else {
-            //Insertion
+            //Insertion & Frequency increase
             String key = tuple.getString(0);
             entryCount++;
             if (!counterMap.containsKey(key)) {
@@ -60,7 +63,6 @@ public class HashtagCounterBolt implements IRichBolt {
                 existingEntry.setFrequency(existingEntry.getFrequency() + 1);
                 counterMap.put(key, existingEntry);
             }
-
             //Prune: Delta window and threshold value
             if (entryCount % windowSize == 0) {
                 Iterator mapIter = counterMap.entrySet().iterator();
@@ -68,7 +70,7 @@ public class HashtagCounterBolt implements IRichBolt {
                     LossyHashtag temp = ((Map.Entry<String, LossyHashtag>) mapIter.next()).getValue();
                     if (temp.getFrequency() + temp.getDelta() <= bCurrent)
                         mapIter.remove();
-                    else if(temp.getFrequency() > (threshold - eta)*entryCount)
+                    else if(temp.getFrequency() < (threshold - eta)*entryCount)
                         mapIter.remove();
                 }
                 bCurrent++;
